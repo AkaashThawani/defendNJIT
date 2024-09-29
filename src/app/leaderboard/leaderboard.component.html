@@ -1,0 +1,30 @@
+<mat-card>
+    <div class="leader">
+        <div class="leaderboard-text">LEADERBOARD</div>
+        <div class="first">
+            <div><img src="assets/pp.jpeg" height="144px" width="144px"></div>
+            <div>USERNAME</div>
+            <div style="font-weight: 300;">SCORE</div>
+        </div>
+        <div class="second-third">
+            <div class="second">
+                <div><img src="assets/pp.jpeg" height="92px" width="92px"></div>
+                <div>USERNAME</div>
+                <div style="font-weight: 300;">SCORE</div>
+            </div>
+            <div class="third">
+                <div><img src="assets/pp.jpeg" height="92px" width="92px"></div>
+                <div>USERNAME</div>
+                <div style="font-weight: 300;">SCORE</div>
+            </div>
+        </div>
+        <div class="rest">
+            <div *ngFor="let user of users;let i=index" class="item">
+                <div>{{user}}</div>
+                <div><img src="assets/pp.jpeg" height="64px" width="64px"></div>
+                <div>USERNAME</div>
+                <div style="font-weight: 300;">SCORE</div>
+            </div>
+        </div>
+    </div>
+</mat-card>

@@ -1,0 +1,39 @@
+.header{
+    background-color: #f61212;
+    color: #fff;    
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: 5px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    font-weight: bold;
+
+
+    .headerright{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: row;
+        gap: 10px;
+    }
+}
+
+.warning{
+    background-color: rgb(255, 67, 67) !important; 
+    font-size: 16px;
+    border-radius: 2px !important;
+    font-weight: normal;
+}
+
+
+
+.menu .cdk-overlay-pane .mat-mdc-menu-panel{
+    background-color: white !important;
+}
+
+.hamMenu{
+    color: white !important;
+    background-color: white !important;
+}

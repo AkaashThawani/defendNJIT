@@ -1,4 +1,4 @@
-.njit-map{
+.njit-map {
     display: flex;
     justify-content: center;
     flex-direction: column;
@@ -7,7 +7,29 @@
     flex-direction: column-reverse;
 }
 
-.quiz-card{
+.quiz-card {}
+
+.question {
+    padding-bottom: 10px;
+}
+
+.options {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+
+    .option {
+        width: 49%;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+}
+
+.qcard {
+    padding: 15px;
     width: 80vw;
     background-color: #fff;
     border: 1px solid #ddd;

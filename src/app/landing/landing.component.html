@@ -1,0 +1,30 @@
+<mat-sidenav-container class="sidenav-container">
+    <mat-sidenav-content>
+        <mat-toolbar color="primary" class="toolbar" *ngIf="loggedIn">
+            <div style="display: flex;flex-direction: row;justify-content: center;align-items: center;">
+                <span style="margin-right: 10px;cursor: pointer;" (click)="goToPlay()">DefendNJIT</span>
+                <div class="menuitem">
+                    <button mat-button (click)="goToLeaderBoard()">Leaderboard</button>
+                </div>
+            </div>
+            <div class="headerright">
+                <button mat-icon-button class="profile" [matMenuTriggerFor]="menu">P</button>
+            </div>
+        </mat-toolbar>
+
+
+        <mat-menu #menu="matMenu" class="menu">
+            <button mat-menu-item>
+                <mat-icon> person_pin</mat-icon>
+                <span>Profile</span>
+            </button>
+            <button mat-menu-item (click)="logOut()">
+                <mat-icon>exit_to_app</mat-icon>
+                <span>Logout</span>
+            </button>
+        </mat-menu>
+        <div style="height: 100%;width: 100%;">
+            <router-outlet></router-outlet>
+        </div>
+    </mat-sidenav-content>
+</mat-sidenav-container>

@@ -15,6 +15,11 @@ export class QuizCardComponent {
   @Input() correctAnswer: string = '';
   selectedOption: string = '';
 
+  constructor() { 
+    console.log(this.options)
+    console.log(this.question)
+  } 
+
   selectOption(option: string) {
     this.selectedOption = option;
     this.checkAnswer(this.selectedOption);

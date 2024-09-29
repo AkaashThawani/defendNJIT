@@ -4,21 +4,25 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { QuizCardComponent } from '../quiz-card/quiz-card.component';
 import { Box3, Mesh, MeshStandardMaterial, SphereGeometry } from 'three';
+import { MatCardModule } from '@angular/material/card';
+import { FirebaseService } from '../firebase.service';
+import { CommonModule } from '@angular/common';
+import { MatButtonModule } from '@angular/material/button';
 
 
 @Component({
   selector: 'app-njit-model',
   standalone: true,
-  imports: [QuizCardComponent],
+  imports: [QuizCardComponent, MatCardModule, CommonModule, MatButtonModule],
   templateUrl: './njit-model.component.html',
   styleUrl: './njit-model.component.scss'
 })
 export class NjitModelComponent {
- 
+
   public scene: THREE.Scene;
   public camera: THREE.PerspectiveCamera;
   public renderer: THREE.WebGLRenderer;
-  public controls:OrbitControls;
+  public controls: OrbitControls;
   public ambientLight: THREE.AmbientLight;
   public directionalLight: THREE.DirectionalLight;
   private model: Mesh; // Your 3D model
@@ -26,13 +30,21 @@ export class NjitModelComponent {
   private asteroidSpeed: number = 0.3; // Speed of the asteroid
   private modelLoaded: boolean = false;
 
-  constructor() {}
+  quizData = []
+
+  constructor(private firebase: FirebaseService) { }
 
   ngOnInit(): void {
+    this.firebase.getQUizData().subscribe((data) => {
+      data.forEach((d) => (d.show = false, d.answered = false));
+      this.quizData = data;
+      console.log(data);
+      this.quizData[0].show = true;
+    })
     this.initThree();
     this.loadModel();
     this.animate();
-    
+   
   }
 
   private initThree() {
@@ -45,7 +57,7 @@ export class NjitModelComponent {
     console.log(window.innerWidth, window.innerHeight);
     this.renderer = new THREE.WebGLRenderer({ antialias: true })
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-    this.controls.enableZoom = true; 
+    this.controls.enableZoom = true;
     this.controls.enablePan = false;
     this.ambientLight = new THREE.AmbientLight(0x404040, 2);
     this.scene.add(this.ambientLight);
@@ -56,7 +68,7 @@ export class NjitModelComponent {
     window.addEventListener('resize', this.onWindowResize.bind(this));
     this.onWindowResize()
 
-    this.spawnAsteroid(); 
+    this.spawnAsteroid();
   }
 
   private loadModel() {
@@ -80,7 +92,7 @@ export class NjitModelComponent {
     const material = new MeshStandardMaterial({ color: 0x888888 });
 
     const asteroid = new Mesh(geometry, material);
-    
+
     asteroid.position.set(0, 200, 0);
     this.asteroids.push(asteroid);
     this.scene.add(asteroid);
@@ -104,9 +116,15 @@ export class NjitModelComponent {
 
   private checkCollision(): boolean {
     if (!this.model) return false;
+
+    this.model.updateMatrixWorld(); // Ensure world matrix is updated
     const modelBoundingBox = new Box3().setFromObject(this.model);
-    
+    const boxHelper = new THREE.Box3Helper(modelBoundingBox, new THREE.Color(1, 0, 0));
+    this.scene.add(boxHelper);
+    modelBoundingBox
+
     for (const asteroid of this.asteroids) {
+      asteroid.updateMatrixWorld(); // Update asteroid's world matrix
       const asteroidBoundingBox = new Box3().setFromObject(asteroid);
       if (modelBoundingBox.intersectsBox(asteroidBoundingBox)) {
         console.log('Collision detected!');
@@ -119,7 +137,7 @@ export class NjitModelComponent {
   private updateAsteroids() {
     for (let i = this.asteroids.length - 1; i >= 0; i--) {
       const asteroid = this.asteroids[i];
-      asteroid.position.y -= this.asteroidSpeed; 
+      asteroid.position.y -= this.asteroidSpeed;
 
       // Reset position if it goes out of view
       if (asteroid.position.y > 200) {
@@ -133,7 +151,20 @@ export class NjitModelComponent {
   ngOnDestroy() {
     window.removeEventListener('resize', this.onWindowResize.bind(this));
   }
-  
+
+  selectQuizAns(ans, i) {
+    this.quizData[i].answered = true;
+    this.quizData[i].show = false;
+    if (ans === this.quizData[i].answer) {
+      console.log('Correct Answer');
+    } else {
+      console.log('Incorrect Answer');
+    }
+    if (i + 1 < this.quizData.length) {
+      this.quizData[i + 1].show = true;
+    }
+  }
+
 }
-  
+
 

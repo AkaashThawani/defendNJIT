@@ -1,0 +1,60 @@
+.leaderboard-text {
+    font-size: 3.5rem; // Extra large text
+    font-weight: bolder; // Different text style
+    color: #333; // Example color
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    padding: 25px;
+}
+
+.leader {
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+}
+
+.first {
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+    align-items: center;
+}
+
+.second-third {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: 60%;
+    gap: 10px;
+    padding: 10px;
+    border-radius: 5px;
+    font-weight: bold;
+
+    .second,
+    .third {
+        display: flex;
+        flex-direction: column;
+        justify-content: start;
+        align-items: center;
+    }
+
+
+}
+
+.rest {
+    width: 50%;
+    padding: 10px;
+    .item {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+        border-radius: 5px;
+        font-weight: bold;
+    }
+}

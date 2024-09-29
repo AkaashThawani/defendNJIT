@@ -1,7 +1,15 @@
-<div id="canvas" class="njit-map">
-<app-quiz-card class="quiz-card"
-  question="What is the capital of France?" 
-  [options]="['Berlin', 'Madrid', 'Paris', 'Rome']" 
-  correctAnswer="Paris">
-</app-quiz-card>
-</div>
+<mat-card>
+  <div id="canvas" class="njit-map">
+    <div *ngFor="let quiz of quizData;index as i">
+      <div class="qcard" *ngIf="quiz.show">
+        <div class="question">{{ quiz.question }}</div>
+        <div class="options">
+          <button mat-stroked-button (click)="selectQuizAns(opt,i)" class="option"
+            *ngFor="let opt of [quiz.option1,quiz.option2,quiz.option3,quiz.option4]" [value]="opt">{{opt}}</button>
+          <div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</mat-card>
