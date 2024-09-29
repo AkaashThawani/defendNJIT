@@ -7,7 +7,25 @@
     flex-direction: column-reverse;
 }
 
-.quiz-card {}
+.healthbar {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    width: 80vw;
+    padding: 0px 0px 10px 0px;
+    margin: auto;
+
+
+}
+.mdc-linear-progress__bar-inner{
+    background-color: greenyellow !important;
+}
+
+mat-progress-bar .mat-progress-bar-fill {
+    width: inherit !important;
+    border-color: greenyellow !important;
+}
 
 .question {
     padding-bottom: 10px;
@@ -22,7 +40,7 @@
     gap: 10px;
 
     .option {
-        width: 49%;
+        width: 49.2%;
         border-radius: 5px;
         cursor: pointer;
     }

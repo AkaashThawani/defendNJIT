@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ViewEncapsulation } from '@angular/core';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
@@ -8,14 +8,15 @@ import { MatCardModule } from '@angular/material/card';
 import { FirebaseService } from '../firebase.service';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
-
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 
 @Component({
   selector: 'app-njit-model',
   standalone: true,
-  imports: [QuizCardComponent, MatCardModule, CommonModule, MatButtonModule],
+  imports: [QuizCardComponent, MatCardModule, CommonModule, MatButtonModule,MatProgressBarModule],
   templateUrl: './njit-model.component.html',
-  styleUrl: './njit-model.component.scss'
+  styleUrl: './njit-model.component.scss',
+  encapsulation:ViewEncapsulation.None
 })
 export class NjitModelComponent {
 
@@ -29,6 +30,9 @@ export class NjitModelComponent {
   private asteroids: Mesh[] = []; // Array to hold asteroids
   private asteroidSpeed: number = 0.3; // Speed of the asteroid
   private modelLoaded: boolean = false;
+  njitHealthBar = 100;
+  incorrectAns = 0;
+  njitHealthBarColor = 'green';
 
   quizData = []
 
@@ -158,6 +162,8 @@ export class NjitModelComponent {
     if (ans === this.quizData[i].answer) {
       console.log('Correct Answer');
     } else {
+      this.njitHealthBar -= 10;
+      this.incorrectAns += 1;
       console.log('Incorrect Answer');
     }
     if (i + 1 < this.quizData.length) {
