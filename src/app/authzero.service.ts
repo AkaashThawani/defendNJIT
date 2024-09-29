@@ -92,10 +92,7 @@ export class AuthzeroService {
       try {
         await updateDoc(userDocRef, { loggedIn: false });
         console.log('User marked as logged out in Firebase:', email);
-        this.setLoggedIn(false);
-        sessionStorage.removeItem('userData');
-        this.router.navigate(['']);
-        this.auth0.logout();
+
       } catch (error) {
         console.error('Error marking user as logged out:', error);
       }
@@ -106,5 +103,9 @@ export class AuthzeroService {
 
   logout() {
     this.markUserAsLoggedOut();
+    this.setLoggedIn(false);
+    sessionStorage.removeItem('userData');
+    this.router.navigate(['']);
+    this.auth0.logout();
   }
 }

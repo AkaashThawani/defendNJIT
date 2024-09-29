@@ -2,28 +2,28 @@
     <div class="leader">
         <div class="leaderboard-text">LEADERBOARD</div>
         <div class="first">
-            <div><img src="assets/pp.jpeg" height="144px" width="144px"></div>
-            <div>USERNAME</div>
-            <div style="font-weight: 300;">SCORE</div>
+            <div><img [src]="first.profilePic" height="144px" width="144px"></div>
+            <div>{{first.name}}</div>
+            <div style="font-weight: 300;">{{first.score}}</div>
         </div>
         <div class="second-third">
             <div class="second">
-                <div><img src="assets/pp.jpeg" height="92px" width="92px"></div>
-                <div>USERNAME</div>
-                <div style="font-weight: 300;">SCORE</div>
+                <div><img [src]="second.profilePic" height="92px" width="92px"></div>
+                <div>{{second.name}}</div>
+                <div style="font-weight: 300;">{{second.score}}</div>
             </div>
             <div class="third">
-                <div><img src="assets/pp.jpeg" height="92px" width="92px"></div>
-                <div>USERNAME</div>
-                <div style="font-weight: 300;">SCORE</div>
+                <div><img [src]="third.profilePic" height="92px" width="92px"></div>
+                <div>{{third.name}}</div>
+                <div style="font-weight: 300;">{{third.score}}</div>
             </div>
         </div>
         <div class="rest">
             <div *ngFor="let user of users;let i=index" class="item">
-                <div>{{user}}</div>
-                <div><img src="assets/pp.jpeg" height="64px" width="64px"></div>
-                <div>USERNAME</div>
-                <div style="font-weight: 300;">SCORE</div>
+                <div>{{i+4}}</div>
+                <div><img [src]="user.profilePic" height="64px" width="64px"></div>
+                <div>{{user.name}}</div>
+                <div style="font-weight: 300;">{{user.score}}</div>
             </div>
         </div>
     </div>

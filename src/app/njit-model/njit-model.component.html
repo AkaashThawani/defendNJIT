@@ -1,12 +1,11 @@
 <mat-card>
-  <div  class="healthbar">
-    <mat-progress-bar mode="determinate" [value]="njitHealthBar"
-     ></mat-progress-bar>
+  <div class="healthbar">
+    <mat-progress-bar mode="determinate" [value]="njitHealthBar"></mat-progress-bar>
   </div>
   <div id="canvas" class="njit-map">
     <div *ngFor="let quiz of quizData;index as i">
       <div class="qcard" *ngIf="quiz.show">
-        <div class="question"> Q. {{ quiz.question }}</div>
+        <div class="question"> Q {{i + 1}}. {{ quiz.question }}</div>
         <div class="options">
           <button mat-stroked-button (click)="selectQuizAns(opt,i)" class="option"
             *ngFor="let opt of [quiz.option1,quiz.option2,quiz.option3,quiz.option4]" [value]="opt">{{opt}}</button>

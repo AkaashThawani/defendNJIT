@@ -9,14 +9,19 @@ import { FirebaseService } from '../firebase.service';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { InstructionModalComponent } from '../instruction-modal/instruction-modal.component';
+import { ScoreModalComponent } from '../score-modal/score-modal.component';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-njit-model',
   standalone: true,
-  imports: [QuizCardComponent, MatCardModule, CommonModule, MatButtonModule,MatProgressBarModule],
+  imports: [QuizCardComponent, MatCardModule, CommonModule, MatButtonModule, MatProgressBarModule, MatSnackBarModule, MatDialogModule],
   templateUrl: './njit-model.component.html',
   styleUrl: './njit-model.component.scss',
-  encapsulation:ViewEncapsulation.None
+  encapsulation: ViewEncapsulation.None
 })
 export class NjitModelComponent {
 
@@ -27,28 +32,30 @@ export class NjitModelComponent {
   public ambientLight: THREE.AmbientLight;
   public directionalLight: THREE.DirectionalLight;
   private model: Mesh; // Your 3D model
-  private asteroids: Mesh[] = []; // Array to hold asteroids
+  private asteroids: { mesh: Mesh, speed: number, directionX: number, sparks: Mesh[] }[] = [];
   private asteroidSpeed: number = 0.3; // Speed of the asteroid
   private modelLoaded: boolean = false;
   njitHealthBar = 100;
   incorrectAns = 0;
   njitHealthBarColor = 'green';
+  private quizCompleted: boolean = false;
 
   quizData = []
 
-  constructor(private firebase: FirebaseService) { }
-
-  ngOnInit(): void {
+  constructor(private firebase: FirebaseService, private snackBar: MatSnackBar, public dialog: MatDialog, private router: Router) {
     this.firebase.getQUizData().subscribe((data) => {
       data.forEach((d) => (d.show = false, d.answered = false));
       this.quizData = data;
       console.log(data);
       this.quizData[0].show = true;
     })
+  }
+
+  ngOnInit(): void {
+    this.showInstructions();
     this.initThree();
-    this.loadModel();
-    this.animate();
-   
+    this.loadModels();
+
   }
 
   private initThree() {
@@ -71,19 +78,20 @@ export class NjitModelComponent {
     document.getElementById('canvas').appendChild(this.renderer.domElement);
     window.addEventListener('resize', this.onWindowResize.bind(this));
     this.onWindowResize()
-
-    this.spawnAsteroid();
   }
 
-  private loadModel() {
-    const loader = new GLTFLoader();
-    loader.load('assets/saveNJIT.glb', (gltf) => {
-      this.scene.add(gltf.scene);
-      console.log('Model loaded successfully!');
-    }, undefined, (error) => {
-      console.error('An error occurred while loading the model:', error);
+  showInstructions() {
+    const dialogRef = this.dialog.open(InstructionModalComponent, {
+      width: '400px'
+    });
+
+    dialogRef.afterClosed().subscribe(() => {
+      this.startGame();
+    }); dialogRef.afterClosed().subscribe(() => {
+      console.log('The dialog was closed');
     });
   }
+
 
   onWindowResize() {
     this.camera.aspect = window.innerWidth / window.innerHeight;
@@ -91,86 +99,263 @@ export class NjitModelComponent {
     this.renderer.setSize(window.innerWidth * 0.8, window.innerHeight * 0.6);
   }
 
+  private removeLastAsteroid() {
+    if (this.asteroids.length > 0) {
+      const lastAsteroid = this.asteroids.pop(); // Remove the last asteroid from the array
+      this.scene.remove(lastAsteroid.mesh); // Remove the asteroid from the scene
+      console.log("Correct answer - Asteroid removed");
+    }
+  }
+
+  private speedUpCurrentAsteroid() {
+    if (this.asteroids.length > 0) {
+      const lastAsteroid = this.asteroids[this.asteroids.length - 1];
+      lastAsteroid.speed *= 3; // Increase the speed (e.g., triple it)
+
+      console.log('Speeding up asteroid to fall faster');
+    }
+  }
+
+
+  selectQuizAns(ans, i) {
+    this.quizData[i].answered = true;
+
+    if (ans === this.quizData[i].answer) {
+      console.log('Correct Answer');
+      this.removeLastAsteroid(); // Remove the last asteroid correctly
+      this.spawnAsteroid(); // Spawn a new asteroid
+    } else {
+      // this.njitHealthBar = (this.quizData.length - this.incorrectAns) / this.quizData.length * 100;
+      this.speedUpCurrentAsteroid();
+      this.snackBar.open('Incorrect answer! Bad Luck NJIT', 'Close', {
+        duration: 2000,
+      });
+      console.log('Incorrect Answer');
+    }
+    this.quizData[i].show = false;
+    if (i == this.quizData.length - 1) {
+      this.submitScore();
+    } else {
+      this.quizData[i + 1].show = true
+    }
+  }
+
+
+  private modelYThreshold: number = 50;
+  private asteroidMinY: number = 200;
+  private asteroidMaxY: number = 300;
+
+  private model1: THREE.Group | null = null; // Safe model
+  private model2: THREE.Group | null = null; // 25 destroyed model
+  private model3: THREE.Group | null = null; // 50 destroyed model
+  private model4: THREE.Group | null = null; // 75 destroyed model
+  private model5: THREE.Group | null = null; // 100 destroyed model
+  private model6: THREE.Group | null = null; // Destroyed model
+  private currentModelIndex: number = 0; // Track the current model
+  private destroyedAsteroidsCount: number = 0; // Counter for destroyed asteroids
+
+  private theta: number = 0; // Variable for rotation angle
+  private radius: number = 150; // Radius of the circular camera path
+
+
+  private loadModels() {
+    const loader = new GLTFLoader();
+    const modelPaths = [
+      'assets/saveNJIT.glb',          // Model 1
+    ];
+
+    loader.load(modelPaths[0], (gltf) => {
+      this.model1 = gltf.scene;
+      this.scene.add(this.model1);
+      this.model1.visible = true; // Show model 1
+      console.log("Model 1 loaded");
+      this.loadRemainingModels(loader);
+
+    });
+
+    // this.startGame();
+
+
+  }
+
+  private startGame() {
+    this.animate();
+    this.spawnAsteroid();
+  }
+
+  private loadRemainingModels(loader: GLTFLoader) {
+    loader.load('assets/25DestroyedNJIT.glb', (gltf) => {
+      this.model2 = gltf.scene;
+      this.scene.add(this.model2);
+      this.model2.visible = false; // Initially hidden
+      console.log("Model 2 loaded");
+    });
+
+    loader.load('assets/50DestroyedNJIT.glb', (gltf) => {
+      this.model3 = gltf.scene;
+      this.scene.add(this.model3);
+      this.model3.visible = false; // Initially hidden
+      console.log("Model 3 loaded");
+    });
+
+    loader.load('assets/75DestroyedNJIT.glb', (gltf) => {
+      this.model4 = gltf.scene;
+      this.scene.add(this.model4);
+      this.model4.visible = false; // Initially hidden
+      console.log("Model 4 loaded");
+    });
+
+    loader.load('assets/100DestroyedNJIT.glb', (gltf) => {
+      this.model5 = gltf.scene;
+      this.scene.add(this.model5);
+      this.model5.visible = false; // Initially hidden
+      console.log("Model 5 loaded");
+    });
+
+    loader.load('assets/DestroyedNJIT.glb', (gltf) => {
+      this.model6 = gltf.scene;
+      this.scene.add(this.model6);
+      this.model6.visible = false; // Initially hidden
+      console.log("Model 6 loaded");
+    });
+  }
+
+  private onAsteroidDestroyed() {
+    this.destroyedAsteroidsCount++;
+
+    // Check if we should transition to the next model
+    if (this.destroyedAsteroidsCount % 3 === 0) {
+      this.handleModelTransition();
+    }
+  }
+
+  private handleModelTransition() {
+    if (this.currentModelIndex === 0 && this.model1) {
+      this.model1.visible = false; // Hide model 1
+      this.model2.visible = true;  // Show model 2
+      this.currentModelIndex = 1;  // Move to the next model index
+    } else if (this.currentModelIndex === 1 && this.model2) {
+      this.model2.visible = false; // Hide model 2
+      this.model3.visible = true;  // Show model 3
+      this.currentModelIndex = 2;  // Move to the next model index
+    } else if (this.currentModelIndex === 2 && this.model3) {
+      this.model3.visible = false; // Hide model 3
+      this.model4.visible = true;  // Show model 4
+      this.currentModelIndex = 3;  // Move to the next model index
+    } else if (this.currentModelIndex === 3 && this.model4) {
+      this.model4.visible = false; // Hide model 4
+      this.model5.visible = true;  // Show model 5
+      this.currentModelIndex = 4;  // Move to the last model index
+    } else if (this.currentModelIndex === 4 && this.model5) {
+      this.model5.visible = false; // Hide model 5
+      this.model6.visible = true;  // Show model 6
+      this.currentModelIndex = 5;  // Move to the last model index
+    }
+  }
+
   spawnAsteroid() {
-    const geometry = new SphereGeometry(6, 23, 30);
-    const material = new MeshStandardMaterial({ color: 0x888888 });
+    const geometry = new SphereGeometry(5, 20, 30);
+    const material = new MeshStandardMaterial({ color: 0x99AABB });
 
     const asteroid = new Mesh(geometry, material);
 
-    asteroid.position.set(0, 200, 0);
-    this.asteroids.push(asteroid);
+    const xPos = (Math.random() - 0.5) * 400;
+    const zPos = (Math.random() - 0.5) * 400;
+    const yPos = this.asteroidMinY + Math.random() * (this.asteroidMaxY - this.asteroidMinY) + 20;
+
+    asteroid.position.set(xPos, yPos, zPos);
+    const directionX = (Math.random() - 0.5) * 0.5;
+    const speed = (yPos - this.asteroidMinY) / 100 + 0.3;
+
+    const sparks: Mesh[] = [];
+
+    this.asteroids.push({ mesh: asteroid, speed: speed, directionX: directionX, sparks: sparks });
     this.scene.add(asteroid);
-    console.log('Asteroid spawned!');
+
+    console.log("Asteroid spawned at X: ${xPos}, Y: ${yPos}, Z: ${zPos} with speed: ${speed}");
   }
 
+  private endGame() {
+    console.log('Quiz completed');
+    this.quizCompleted = true; // Set the flag to indicate the quiz is done
+  }
 
   private animate() {
+    if (this.quizCompleted) return;
     requestAnimationFrame(() => this.animate());
-    this.renderer.render(this.scene, this.camera);
-    this.updateAsteroids()
-    if (this.checkCollision()) {
-      console.log('Collision detected!');
-      // Handle the collision (e.g., remove the asteroid, restart the game, etc.)
-      this.asteroids.forEach(asteroid => this.scene.remove(asteroid));
-      this.asteroids = []; // Clear asteroid array
-    }
+
+    // Update the camera's position in a circular path
+    this.theta += 0.002; // Slower rotation speed (smaller value = slower)
+
+    const zoomedOutRadius = 275; // Increased radius for zooming out
+    this.camera.position.x = zoomedOutRadius * Math.sin(this.theta);
+    this.camera.position.z = zoomedOutRadius * Math.cos(this.theta);
+
+    // Ensure the camera is always looking at the center (0, 0, 0)
+    this.camera.lookAt(0, 10, 0);
 
     this.renderer.render(this.scene, this.camera);
+    this.updateAsteroids();
   }
 
-  private checkCollision(): boolean {
-    if (!this.model) return false;
-
-    this.model.updateMatrixWorld(); // Ensure world matrix is updated
-    const modelBoundingBox = new Box3().setFromObject(this.model);
-    const boxHelper = new THREE.Box3Helper(modelBoundingBox, new THREE.Color(1, 0, 0));
-    this.scene.add(boxHelper);
-    modelBoundingBox
-
-    for (const asteroid of this.asteroids) {
-      asteroid.updateMatrixWorld(); // Update asteroid's world matrix
-      const asteroidBoundingBox = new Box3().setFromObject(asteroid);
-      if (modelBoundingBox.intersectsBox(asteroidBoundingBox)) {
-        console.log('Collision detected!');
-        return true; // Collision detected
-      }
-    }
-    return false;
-  }
 
   private updateAsteroids() {
+    if (this.quizCompleted) return;
     for (let i = this.asteroids.length - 1; i >= 0; i--) {
-      const asteroid = this.asteroids[i];
-      asteroid.position.y -= this.asteroidSpeed;
+      const asteroidObj = this.asteroids[i];
+      const asteroid = asteroidObj.mesh;
 
-      // Reset position if it goes out of view
-      if (asteroid.position.y > 200) {
-        this.scene.remove(asteroid); // Remove from scene
-        this.asteroids.splice(i, 1); // Remove from array
-        this.spawnAsteroid(); // Spawn a new asteroid
+      asteroid.position.y -= asteroidObj.speed;
+      asteroid.position.x += asteroidObj.directionX * asteroidObj.speed;
+
+      if (asteroid.position.y < 50) {
+        console.log("Asteroid destroyed");
+        this.scene.remove(asteroid);
+        this.asteroids.splice(i, 1);
+        this.onAsteroidDestroyed();
+        // this.quizData[i].show = false
+        // this.quizData[i+ 1].show = true
+        this.incorrectAns += 1;
+        this.njitHealthBar -= 10;
+        if (this.njitHealthBar == 0) {
+          this.submitScore();
+
+        }
+        this.spawnAsteroid();
       }
     }
+  }
+
+  submitScore() {
+    this.endGame();
+    console.log('Game Over');
+    console.log('Incorrect Answers: ', this.incorrectAns);
+    let userData = JSON.parse(sessionStorage.getItem('userData'));
+    this.firebase.saveQuizData({ score: this.quizData.length - this.incorrectAns, email: userData.email, profilePic: userData.profilePic, name: userData.name }).then(() => {
+      console.log('Quiz data saved');
+    });
+    this.scoreModal();
+  }
+
+  scoreModal() {
+    const dialogRef = this.dialog.open(ScoreModalComponent, {
+      data: { score: this.quizData.length - this.incorrectAns } // Pass the score to the modal
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result === 'playAgain') {
+        this.startGame(); // Start a new game
+      } else if (result === 'leaderboard') {
+        this.goToLeaderboard(); // Navigate to the leaderboard
+      }
+    });
+  }
+
+  goToLeaderboard() {
+    this.router.navigate(['/leaderboard']);
   }
 
   ngOnDestroy() {
     window.removeEventListener('resize', this.onWindowResize.bind(this));
   }
-
-  selectQuizAns(ans, i) {
-    this.quizData[i].answered = true;
-    this.quizData[i].show = false;
-    if (ans === this.quizData[i].answer) {
-      console.log('Correct Answer');
-    } else {
-      this.njitHealthBar -= 10;
-      this.incorrectAns += 1;
-      console.log('Incorrect Answer');
-    }
-    if (i + 1 < this.quizData.length) {
-      this.quizData[i + 1].show = true;
-    }
-  }
-
 }
-
-

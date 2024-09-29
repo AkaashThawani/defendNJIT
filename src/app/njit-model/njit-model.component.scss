@@ -18,7 +18,8 @@
 
 
 }
-.mdc-linear-progress__bar-inner{
+
+.mdc-linear-progress__bar-inner {
     background-color: greenyellow !important;
 }
 
@@ -55,3 +56,8 @@ mat-progress-bar .mat-progress-bar-fill {
     margin: 15px;
     transition: transform 0.3s;
 }
+
+.red-snackbar {
+    background-color: #ff4c4c; /* Red color */
+    color: white; /* White text */
+  }

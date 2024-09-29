@@ -24,7 +24,7 @@ export class FirebaseService {
   }
 
   saveQuizData(newData: any) {
-    const dataRef = collection(this.firestore, 'quiz');
+    const dataRef = collection(this.firestore, 'leaderboards');
     return addDoc(dataRef, newData);
   }
 

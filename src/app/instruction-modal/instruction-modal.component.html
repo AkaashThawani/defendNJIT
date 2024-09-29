@@ -1,0 +1,14 @@
+<h2 mat-dialog-title>Game Instructions</h2>
+<div mat-dialog-content>
+    <p>Welcome to the DefendNJIT! Here's how to play:</p>
+    <ul>
+        <li>Avoid the asteroids by answering the quiz questions correctly.</li>
+        <li>If you answer wrong, an asteroid will hit and destroy part of the NJIT model.</li>
+        <li>For each correct answer, you will destroy an asteroid.</li>
+        <li>The game ends when you finish all the questions or the model is completely destroyed.</li>
+    </ul>
+</div>
+
+<div mat-dialog-actions style="display:flex;flex-direction: row-reverse;">
+    <button mat-button (click)="onPlayNow()">Play Now</button>
+</div>
